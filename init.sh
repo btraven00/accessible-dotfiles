@@ -39,7 +39,7 @@ adh() {
       topics+=("$topic_name")
       echo "$idx. $topic_name"
       ((idx++))
-    done < <(find "$dotfiles_dir" -mindepth 1 -maxdepth 1 -type d | sort)
+    done < <(find "$dotfiles_dir" -mindepth 1 -maxdepth 1 -type d -not -name ".*" | sort)
     
     [[ ${#topics[@]} -gt 0 ]] && echo "Usage: adh ${topics[0]}"
     return 0
@@ -86,10 +86,13 @@ adh() {
   while IFS= read -r func_name; do
     functions+=("$func_name")
     
-    # Try to extract the first comment line after function declaration for description
-    local description=$(sed -n "/^${func_name}()/,/^[[:space:]]*{/p" "$script_file" | \
-                        grep -m1 "^[[:space:]]*#" | \
-                        sed 's/^[[:space:]]*#[[:space:]]*//')
+    # Try to extract the comment line directly before function declaration
+    local line_num=$(grep -n "^${func_name}()" "$script_file" | cut -d: -f1)
+    local description=""
+    if [[ -n "$line_num" && "$line_num" -gt 1 ]]; then
+      local prev_line=$((line_num - 1))
+      description=$(sed -n "${prev_line}p" "$script_file" | grep "^#" | sed 's/^#[[:space:]]*//')
+    fi
     
     if [[ -n "$description" ]]; then
       echo "$idx. $func_name - $description"
