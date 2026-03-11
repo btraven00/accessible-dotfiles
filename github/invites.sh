@@ -1,3 +1,4 @@
+# Accept all pending GitHub repository invitations
 gh_accept_invites() {
   invites_json=$(gh api /user/repository_invitations 2>/dev/null)
   invite_count=$(echo "$invites_json" | jq 'length')
